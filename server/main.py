@@ -1,13 +1,11 @@
+from collections import defaultdict
+from math import sqrt
+import random
+from random import sample
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel, Field, constr
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session
-# API to populate dummy data for testing
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import linear_kernel
-from sklearn.decomposition import TruncatedSVD
-import numpy as np
-
 
 # FastAPI app
 app = FastAPI()
@@ -129,9 +127,8 @@ def add_client_provider_mapping(mapping: ClientProviderMappingCreate, db: Sessio
     return new_mapping
 
 
-
 # API to populate dummy data for testing
-@app.post("/populate-dummy-data/")
+@app.get("/populate-dummy-data/")
 def populate_dummy_data(db: Session = Depends(get_db)):
     # Add some dummy providers
     providers = [
@@ -142,6 +139,10 @@ def populate_dummy_data(db: Session = Depends(get_db)):
         Provider(name="Dr. Edward", specialization="Life Coach", location="Houston", gender="Male", language="English", cultural_background="British"),
         Provider(name="Dr. Fiona", specialization="Psychologist", location="New York", gender="Female", language="Spanish", cultural_background="Mexican"),
         Provider(name="Dr. George", specialization="Therapist", location="San Francisco", gender="Male", language="Mandarin", cultural_background="Chinese"),
+        Provider(name="Dr. Helen", specialization="Counselor", location="Los Angeles", gender="Female", language="English", cultural_background="Latino"),
+        Provider(name="Dr. Ian", specialization="Psychologist", location="Chicago", gender="Male", language="French", cultural_background="Canadian"),
+        Provider(name="Dr. Jane", specialization="Psychiatrist", location="New York", gender="Female", language="English", cultural_background="American")
+    
     ]
 
     # Add some dummy clients
@@ -151,21 +152,134 @@ def populate_dummy_data(db: Session = Depends(get_db)):
         Client(name="Michael Lee", need="Stress", location="San Francisco", gender="Male", language="Mandarin", cultural_background="Chinese", preferred_gender="Female", preferred_cultural_background="Chinese"),
         Client(name="Emily Davis", need="Grief", location="Miami", gender="Female", language="English", cultural_background="American", preferred_gender="Male", preferred_cultural_background="Cuban"),
         Client(name="Laura Garcia", need="Relationship Issues", location="Houston", gender="Female", language="Spanish", cultural_background="Mexican", preferred_gender="Male", preferred_cultural_background="Mexican"),
+        Client(name="David Nguyen", need="Trauma", location="Chicago", gender="Male", language="English", cultural_background="Canadian", preferred_gender="Female", preferred_cultural_background="Canadian"),
+        Client(name="Sarah Johnson", need="Anxiety", location="New York", gender="Female", language="English", cultural_background="American", preferred_gender="Male", preferred_cultural_background="American"),
+        Client(name="Robert Wilson", need="Depression", location="Los Angeles", gender="Male", language="Spanish", cultural_background="Latino", preferred_gender="Female", preferred_cultural_background="Latino"),
+        Client(name="Jessica Taylor", need="Stress", location="San Francisco", gender="Female", language="Mandarin", cultural_background="Chinese", preferred_gender="Male", preferred_cultural_background="Chinese"),
+        Client(name="Michael Brown", need="Grief", location="Miami", gender="Male", language="English", cultural_background="American", preferred_gender="Female", preferred_cultural_background="Cuban")
     ]
     mappings = [
         ClientProviderMapping(client_id=1, provider_id=1, rating=5),
         ClientProviderMapping(client_id=1, provider_id=2, rating=3),
         ClientProviderMapping(client_id=2, provider_id=2, rating=4),
         ClientProviderMapping(client_id=2, provider_id=3, rating=5),
+
     ]
     # Insert into the database
     db.add_all(providers)
     db.add_all(clients)
     db.add_all(mappings)
     db.commit()
-    
     return {"message": "Dummy data added successfully."}
 
+# Calculate scores based on content filtering
+def content_based_score(client: Client, provider: Provider) -> float:
+    score = 0
+    
+    if provider.location == client.location:
+        score += 50  # Weight for matching location
+    if provider.gender == client.preferred_gender:
+        score += 30  # Weight for matching gender
+    if provider.cultural_background == client.preferred_cultural_background:
+        score += 20  # Weight for matching cultural background
+
+    return score
+
+# Calculate scores based on collaborative filtering
+def collaborative_score(client_id: int, provider_id: int, db: Session) -> float:
+    mappings = db.query(ClientProviderMapping).all()
+    client_ratings = defaultdict(dict)
+
+    # Populate client ratings for providers
+    for mapping in mappings:
+        client_ratings[mapping.client_id][mapping.provider_id] = mapping.rating
+
+    # Calculate collaborative score based on similar clients
+    target_client_ratings = client_ratings[client_id]
+    score = 0
+    count = 0
+
+    for other_client_id, ratings in client_ratings.items():
+        if other_client_id == client_id:
+            continue
+        similarity = calculate_pearson_correlation(target_client_ratings, ratings)
+        if similarity > 0:
+            score += similarity * ratings.get(provider_id, 0)
+            count += 1
+
+    return (score / count) if count > 0 else 0
+
+# Combine content and collaborative scores
+def combined_score(client: Client, provider: Provider, db: Session) -> float:
+    content_score = content_based_score(client, provider)
+    collaborative_score_value = collaborative_score(client.id, provider.id, db)
+    
+    # Normalize collaborative score to be out of 100
+    collaborative_score_normalized = (collaborative_score_value / 5) * 100  # Assuming ratings are out of 5
+    total_score = (content_score * 0.6) + (collaborative_score_normalized * 0.4)  # Weighted average
+
+    return min(total_score, 100)  # Ensure score is capped at 100
+
+# Get recommendations for a client
+def get_recommendations(client_id: int, db: Session):
+    client = db.query(Client).filter(Client.id == client_id).first()
+    providers = db.query(Provider).all()
+    
+    provider_scores = []
+    
+    for provider in providers:
+        score = combined_score(client, provider, db)
+        provider_scores.append((provider, score))
+
+    # Sort providers by score in descending order
+    provider_scores.sort(key=lambda x: x[1], reverse=True)
+    
+    # Return top 5 providers with scores
+    top_providers = provider_scores[:5]
+    
+    return {
+        "recommendations": [
+            {
+                "id": provider.id,
+                "name": provider.name,
+                "specialization": provider.specialization,
+                "location": provider.location,
+                "gender": provider.gender,
+                "language": provider.language,
+                "cultural_background": provider.cultural_background,
+                "score": score
+            }
+            for provider, score in top_providers
+        ]
+    }
+
+# Pearson correlation for similarity between two clients' ratings
+def calculate_pearson_correlation(ratings1, ratings2):
+    common_providers = set(ratings1.keys()) & set(ratings2.keys())
+
+    if len(common_providers) == 0:
+        return 0  # No common providers, similarity is 0
+
+    sum1, sum2, sum1_sq, sum2_sq, sum_products = 0, 0, 0, 0, 0
+    for provider_id in common_providers:
+        rating1 = ratings1[provider_id]
+        rating2 = ratings2[provider_id]
+        sum1 += rating1
+        sum2 += rating2
+        sum1_sq += rating1 ** 2
+        sum2_sq += rating2 ** 2
+        sum_products += rating1 * rating2
+
+    numerator = sum_products - (sum1 * sum2 / len(common_providers))
+    denominator = sqrt((sum1_sq - sum1 ** 2 / len(common_providers)) * (sum2_sq - sum2 ** 2 / len(common_providers)))
+
+    return numerator / denominator if denominator != 0 else 0
+
+# Recommendation API
+@app.get("/recommend/{client_id}")
+def recommend(client_id: int, db: Session = Depends(get_db)):
+    recommendations = get_recommendations(client_id, db)
+    return recommendations
 
 # Basic root endpoint for testing
 @app.get("/")
