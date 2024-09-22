@@ -2,6 +2,12 @@ from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel, Field, constr
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session
+# API to populate dummy data for testing
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
+from sklearn.decomposition import TruncatedSVD
+import numpy as np
+
 
 # FastAPI app
 app = FastAPI()
@@ -64,7 +70,6 @@ class ProviderCreate(BaseModel):
     # gender = Column(String(10), nullable=True)
     # language = Column(String(50), nullable=True)
     # cultural_background = Column(String(100), nullable=True)
-    
     name: constr(min_length=1, max_length=100)
     specialization: constr(min_length=1, max_length=100)
     location: constr(min_length=1, max_length=100)
@@ -122,6 +127,45 @@ def add_client_provider_mapping(mapping: ClientProviderMappingCreate, db: Sessio
     db.refresh(new_mapping)
     
     return new_mapping
+
+
+
+# API to populate dummy data for testing
+@app.post("/populate-dummy-data/")
+def populate_dummy_data(db: Session = Depends(get_db)):
+    # Add some dummy providers
+    providers = [
+        Provider(name="Dr. Alice", specialization="Psychologist", location="New York", gender="Female", language="English", cultural_background="American"),
+        Provider(name="Dr. Bob", specialization="Therapist", location="Los Angeles", gender="Male", language="Spanish", cultural_background="Latino"),
+        Provider(name="Dr. Charlie", specialization="Counselor", location="Chicago", gender="Non-binary", language="French", cultural_background="Canadian"),
+        Provider(name="Dr. Diana", specialization="Psychiatrist", location="Miami", gender="Female", language="English", cultural_background="Cuban"),
+        Provider(name="Dr. Edward", specialization="Life Coach", location="Houston", gender="Male", language="English", cultural_background="British"),
+        Provider(name="Dr. Fiona", specialization="Psychologist", location="New York", gender="Female", language="Spanish", cultural_background="Mexican"),
+        Provider(name="Dr. George", specialization="Therapist", location="San Francisco", gender="Male", language="Mandarin", cultural_background="Chinese"),
+    ]
+
+    # Add some dummy clients
+    clients = [
+        Client(name="John Doe", need="Anxiety", location="New York", gender="Male", language="English", cultural_background="American", preferred_gender="Female", preferred_cultural_background="American"),
+        Client(name="Jane Smith", need="Depression", location="Los Angeles", gender="Female", language="Spanish", cultural_background="Latino", preferred_gender="Male", preferred_cultural_background="Latino"),
+        Client(name="Michael Lee", need="Stress", location="San Francisco", gender="Male", language="Mandarin", cultural_background="Chinese", preferred_gender="Female", preferred_cultural_background="Chinese"),
+        Client(name="Emily Davis", need="Grief", location="Miami", gender="Female", language="English", cultural_background="American", preferred_gender="Male", preferred_cultural_background="Cuban"),
+        Client(name="Laura Garcia", need="Relationship Issues", location="Houston", gender="Female", language="Spanish", cultural_background="Mexican", preferred_gender="Male", preferred_cultural_background="Mexican"),
+    ]
+    mappings = [
+        ClientProviderMapping(client_id=1, provider_id=1, rating=5),
+        ClientProviderMapping(client_id=1, provider_id=2, rating=3),
+        ClientProviderMapping(client_id=2, provider_id=2, rating=4),
+        ClientProviderMapping(client_id=2, provider_id=3, rating=5),
+    ]
+    # Insert into the database
+    db.add_all(providers)
+    db.add_all(clients)
+    db.add_all(mappings)
+    db.commit()
+    
+    return {"message": "Dummy data added successfully."}
+
 
 # Basic root endpoint for testing
 @app.get("/")
