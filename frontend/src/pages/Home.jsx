@@ -1,5 +1,4 @@
 import React from 'react';
-import './Buttons.css';
 
 function Home() {
   return (
@@ -12,4 +11,4 @@ function Home() {
   );
 }
 
-export default Buttons;
+export default Home;

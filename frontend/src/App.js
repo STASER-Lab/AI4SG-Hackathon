@@ -18,12 +18,13 @@ function App() {
       children: [
         
         {
-          path: "/adminlogin",
-          element: <Login/>
+          path: "/home",
+          element: <Home/>
         },
         {
-          path: "/home",
-          element: <Buttons/>
+          path: "/clientintake",
+          element: <ClientsPage/>
+
         }
         
       ]
