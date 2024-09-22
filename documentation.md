@@ -3,34 +3,31 @@
 ## 1. Project Overview
 
 ### 1.1 Project Statement
-- **Problem Statement**: Describe the primary problem or challenge that the project aims to address.
-- **Objectives**: List the key objectives of the project.
-- **Target Audience**: Define who the intended beneficiaries or users are.
-
+- **Problem Statement**: Wildfire and other disasters happening globally. This website aim to indicate them 
+- **Objectives**:This website aim to indicate the disaters
+- **Target Audience**: volunteers and travellers
 ### 1.2 Proposed Solution
-- **Solution Overview**: Provide a summary of the proposed solution.
-- **Key Features**: Highlight the main features of the solution.
-- **Expected Impact**: Describe the anticipated outcomes and impacts of the solution.
+- **Solution Overview**: using the nasa enonet data to display the places of disasters
+- **Key Features**: using markers to shows the events on the map
+- **Expected Impact**: Help travellers avoid disastered places and volunteers that want to help people to come to the area 
 
 ### 1.3 Technical Aspects
-- **Programming Languages**: List all programming languages used in the project, detailing their roles and why they were chosen (e.g., Python for data analysis, JavaScript for front-end development).
-- **Frameworks and Libraries**: Specify the frameworks and libraries employed (e.g., TensorFlow, React, Django).
+- **Programming Languages**: JavaScript for the front end and displaying the components. CSS for styling the contents
+- **Frameworks and Libraries**: React
 
 
 ## 2. Documentation of AI Tools Used
 
 ### 2.1 Overview of AI Tools
-- **Tool Name**: List each AI tool used (e.g., ChatGPT, CodeWhisperer).
-- **Purpose**: Describe the purpose of each tool in the context of the project.
+- **Tool Name**: chatgpt
+- **Purpose**: inspire the idea to us and solve some bugs issues
 
 ### 2.2 Application of AI Tools
-- **When Applied**: Specify when each tool was applied during the project phases (e.g., brainstorming, developing).
-- **How Applied**: Detail the methods or processes through which the AI tool was utilized.
-- **Rationale**: Explain why each tool was selected for its specific application.
+- **When Applied**: Brainstorming ideas and debugging
+- **How Applied**: we used chatgpt when encountering errors, usually syntax error or if we do not remember how to specify the formating in CSS
+- **Rationale**: AI has always been a great too for debugging tasks, although for complicate code it is not efficients but for syntax corrections and code idea it is useful
 
 ### 2.3 Total use of AI Tools
-- **Participan 1-- %usage**: Detail the percentage of AI tool usage by the participant across different project phases, such as brainstorming, development, documentation, and testing. Specify which tools were used most frequently.
-- **Participan 2-- %usage**: Detail the percentage of AI tool usage by the participant across different project phases, such as brainstorming, development, documentation, and testing. Specify which tools were used most frequently.
-- **Participan 3-- %usage**: Detail the percentage of AI tool usage by the participant across different project phases, such as brainstorming, development, documentation, and testing. Specify which tools were used most frequently.
-- **Participan 4-- %usage**: Detail the percentage of AI tool usage by the participant across different project phases, such as brainstorming, development, documentation, and testing. Specify which tools were used most frequently.
-- **Participan 5-- %usage**: Detail the percentage of AI tool usage by the participant across different project phases, such as brainstorming, development, documentation, and testing. Specify which tools were used most frequently.
+- **Participan 1-- %usage**: Brainstorming: 40%
+- **Participan 2-- %usage**: Debugging: 60%
+
