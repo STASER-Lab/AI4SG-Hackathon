@@ -38,9 +38,11 @@ class ClientProviderMapping(Base):
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey('clients.id', ondelete='CASCADE'), nullable=False)
     provider_id = Column(Integer, ForeignKey('providers.id', ondelete='CASCADE'), nullable=False)
+    rating = Column(Integer, nullable=True)  # Add rating (1-5 scale)
     
     client = relationship("Client")
     provider = relationship("Provider")
+
 
 # Create tables
 Base.metadata.create_all(bind=engine)
