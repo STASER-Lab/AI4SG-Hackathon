@@ -21,8 +21,11 @@ class Provider(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    service = Column(String(100), nullable=False)
+    specialization = Column(String(100), nullable=False)
     location = Column(String(100), nullable=False)
+    gender = Column(String(10), nullable=True)
+    language = Column(String(50), nullable=True)
+    cultural_background = Column(String(100), nullable=True)
 
 class Client(Base):
     __tablename__ = 'clients'
@@ -31,6 +34,11 @@ class Client(Base):
     name = Column(String(100), nullable=False)
     need = Column(String(100), nullable=False)
     location = Column(String(100), nullable=False)
+    gender = Column(String(10), nullable=True)
+    language = Column(String(50), nullable=True)
+    cultural_background = Column(String(100), nullable=True)
+    preferred_gender = Column(String(10), nullable=True) 
+    preferred_cultural_background = Column(String(100), nullable=True)
 
 class ClientProviderMapping(Base):
     __tablename__ = 'client_provider_mapping'
@@ -49,8 +57,16 @@ Base.metadata.create_all(bind=engine)
 
 # Pydantic Models (For Validation and Parsing)
 class ProviderCreate(BaseModel):
+    # id = Column(Integer, primary_key=True, index=True)
+    # name = Column(String(100), nullable=False)
+    # specialization = Column(String(100), nullable=False)
+    # location = Column(String(100), nullable=False)
+    # gender = Column(String(10), nullable=True)
+    # language = Column(String(50), nullable=True)
+    # cultural_background = Column(String(100), nullable=True)
+    
     name: constr(min_length=1, max_length=100)
-    service: constr(min_length=1, max_length=100)
+    specialization: constr(min_length=1, max_length=100)
     location: constr(min_length=1, max_length=100)
 
 class ClientCreate(BaseModel):
@@ -61,6 +77,8 @@ class ClientCreate(BaseModel):
 class ClientProviderMappingCreate(BaseModel):
     client_id: int = Field(..., gt=0)
     provider_id: int = Field(..., gt=0)
+    rating: int = Field(None, ge=1, le=5)  # Optional rating (1-5 scale)
+
 
 # Dependency to get a session
 def get_db():
